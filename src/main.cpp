@@ -5,6 +5,8 @@
 const UBaseType_t taskPriority = 1;
 
 TaskHandle_t xGUITaskHandle = NULL;
+TaskHandle_t xScannerTaskHandle = NULL;
+
 
 
 void IRAM_ATTR nav_button_isr()
@@ -37,7 +39,15 @@ void setup()
       NULL,
       taskPriority,
       &xGUITaskHandle);
-}
+
+  xTaskCreate(
+      ScannerTask,
+      "Scanner Task",
+      5000,
+      NULL,
+      taskPriority,
+      &xScannerTaskHandle);
+  }
 
 void loop()
 {

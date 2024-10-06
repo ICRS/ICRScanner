@@ -231,7 +231,7 @@ void GUITask(void *pvParameters)
     // Load the fonts
 
     loadFonts();
-
+    handleScan();
     // Setup some freeRTOS stuff
     const TickType_t xFrequency = 1000 / 24; // 100 ms period
     TickType_t xLastTickTime = xTaskGetTickCount();
