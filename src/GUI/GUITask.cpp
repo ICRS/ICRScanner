@@ -33,7 +33,7 @@ long nfc_last_update = millis();
 Button nav_button = {NAV_BUTTON_PIN, false};
 Button ent_button = {ENT_BUTTON_PIN, false};
 
-view current_view = MENU;
+view current_view = SCAN_CARD;
 int menu_cursor = 0;
 TFT_eSPI tft = TFT_eSPI();
 int cursor[2] = {0, 0};
