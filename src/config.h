@@ -12,4 +12,7 @@
 #define ICRS_SERVER_IP "YOUR SERVER IP"
 #define ICRS_SERVER_PORT 8000 // Your server endpoint port
 
+#define ICRS_SERVER_USERNAME "YOUR USERNAME"
+#define ICRS_SERVER_PASSWORD "YOUR PASSWORD"
+
 #endif

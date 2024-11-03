@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <Arduino.h>
 #include "config.h"
+#include "basic_info.h"
 
 struct Button
 {
@@ -28,6 +29,8 @@ extern view current_view;
 
 extern String card_uid;
 extern bool card_uid_set;
+
+extern basic_info::UserInfo scanned_user_info;
 
 void GUITask(void *pvParamaters);
 void ScannerTask(void *pvParamaters);
