@@ -7,8 +7,6 @@ const UBaseType_t taskPriority = 1;
 TaskHandle_t xGUITaskHandle = NULL;
 TaskHandle_t xScannerTaskHandle = NULL;
 
-
-
 void IRAM_ATTR nav_button_isr()
 {
   nav_button.pressed = true;
@@ -30,8 +28,6 @@ void setup()
   attachInterrupt(ent_button.PIN, ent_button_isr, FALLING);
   Serial.println("ISRs Registered");
 
-  
-  
   xTaskCreate(
       GUITask,
       "GUI Task",
@@ -47,7 +43,7 @@ void setup()
       NULL,
       taskPriority,
       &xScannerTaskHandle);
-  }
+}
 
 void loop()
 {

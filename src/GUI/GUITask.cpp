@@ -1,5 +1,6 @@
 #include "tasks.h"
 #include "assets.h"
+
 #define FONT_SMALL "PixelOperatorMono"
 #define FONT_BIG "PixelOperatorMonoBold"
 #include <vector>
@@ -8,16 +9,6 @@
 #include <FS.h>
 #include <SPI.h>
 #include <TFT_eSPI.h> // Hardware-specific library
-
-enum view
-{
-    SCAN_CARD,
-    MENU,
-    BASIC_INFO,
-    PRINT_INFO,
-    ACTION_MENU,
-    SETTINGS
-};
 
 struct item
 {
@@ -163,9 +154,27 @@ void handleNavigation()
     }
 }
 
+bool basic_info_updated = false;
+
+void handle_basic_info()
+{
+    Serial.println("Hello There " + card_uid);
+
+    if (!basic_info_updated)
+    {
+        tft.fillScreen(TFT_BLACK);
+        tft.loadFont(FONT_BIG);
+        tft.setCursor(12, 12);
+
+        tft.print("Card UID: " + card_uid);
+        basic_info_updated = true;
+    } 
+}
+
 void handleScan()
 {
-    if (new_view){
+    if (new_view)
+    {
         tft.fillScreen(TFT_BLACK);
         // Render border
         tft.drawBitmap(2, 2, epd_bitmap_nfc_border, 236, 131, TFT_WHITE);
@@ -173,22 +182,21 @@ void handleScan()
         tft.drawBitmap(52, 75, epd_bitmap_harry, 58, 40, TFT_WHITE);
         // Write Message
         tft.loadFont(FONT_BIG);
-        tft.setCursor(12,12);
+        tft.setCursor(12, 12);
         tft.print("Scan your");
-        tft.setCursor(12,44);
+        tft.setCursor(12, 44);
         tft.print("Card!");
         new_view = false;
     }
-
 
     if ((millis() - nfc_last_update) > 1000)
     {
         nfc_animation_state = (nfc_animation_state + 1) % 4;
         nfc_last_update = millis();
-        
-        tft.fillRect(110,31,25,63,TFT_BLACK);
-        tft.fillRect(135,8,67,108,TFT_BLACK);
-    Serial.printf("Draw state: %d\n",nfc_animation_state);
+
+        tft.fillRect(110, 31, 25, 63, TFT_BLACK);
+        tft.fillRect(135, 8, 67, 108, TFT_BLACK);
+        Serial.printf("Draw state: %d\n", nfc_animation_state);
         if (nfc_animation_state >= 0)
         {
             tft.drawBitmap(111, 58, epd_bitmap_wave_1, 21, 34, TFT_WHITE);
@@ -214,6 +222,9 @@ void handleViews()
     {
     case (SCAN_CARD):
         handleScan();
+        break;
+    case (BASIC_INFO):
+        handle_basic_info();
         break;
     default:
         handleNavigation();
