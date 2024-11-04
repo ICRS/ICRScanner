@@ -6,21 +6,27 @@
 #include <HTTPClient.h>
 #include <WiFi.h>
 
-namespace ScannerWifi {
+namespace ScannerWifi
+{
+  void init_wifi()
+  {
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(ICRS_SSID, ICRS_PASSWORD);
 
-void init_wifi() {
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ICRS_SSID, ICRS_PASSWORD);
+    Serial.print("Connecting to WiFi ..");
 
-  Serial.print("Connecting to WiFi ..");
+    while (WiFi.status() != WL_CONNECTED)
+    {
+      Serial.print('.');
+      delay(1000);
+    }
 
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print('.');
-    delay(1000);
+    Serial.println(WiFi.localIP());
   }
 
-  Serial.println(WiFi.localIP());
-}
+  bool ready() {
+    return WiFi.isConnected();
+  }
 } // namespace ScannerWifi
 
 #endif

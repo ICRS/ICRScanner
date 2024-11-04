@@ -193,6 +193,9 @@ void handle_basic_info()
 
 void handleScan()
 {
+  if (!ScannerWifi::ready()) tft.drawBitmap(205, 5, epd_bitmap_no_wifi, 25, 25, TFT_WHITE);
+  else { tft.fillRect(205, 5, 25, 25, TFT_BLACK); }
+
   if (new_view)
   {
     tft.fillScreen(TFT_BLACK);

@@ -25,6 +25,10 @@ enum view
     CARD_INFO
 };
 
+namespace ScannerWifi {
+    bool ready();
+}
+
 extern view current_view;
 
 extern String card_uid;
