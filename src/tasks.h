@@ -27,6 +27,7 @@ enum view
 
 namespace ScannerWifi {
     bool ready();
+    void init_wifi();
 }
 
 extern view current_view;
@@ -37,6 +38,7 @@ extern bool card_uid_set;
 extern basic_info::UserInfo scanned_user_info;
 
 void GUITask(void *pvParamaters);
-void ScannerTask(void *pvParamaters);
+
+basic_info::UserInfo get_info(const String &uid);
 
 #endif

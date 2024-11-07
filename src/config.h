@@ -6,7 +6,8 @@
 
 #define SCANNER_SDA 21
 #define SCANNER_SCL 22
-#define SCANNER_IRQ 33
+#define PN532_IRQ 32
+#define PN532_RST 33
 
 #define ICRS_SSID "YOUR SSID"
 #define ICRS_PASSWORD "YOUR WIFI PASSWORD"
