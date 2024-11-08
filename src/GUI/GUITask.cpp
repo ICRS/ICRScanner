@@ -1,14 +1,6 @@
-#include "assets.h"
-#include "tasks.h"
+#include "GUITask.h"
 
-#define FONT_SMALL "PixelOperatorMono"
-#define FONT_BIG "PixelOperatorMonoBold"
-#include <vector>
-
-// Font files are stored in SPIFFS, so load the library
-#include <FS.h>
-#include <SPI.h>
-#include <TFT_eSPI.h> // Hardware-specific library
+#include <mutex>
 
 struct item
 {
@@ -26,7 +18,16 @@ Button ent_button = {ENT_BUTTON_PIN, false};
 
 view current_view = SCAN_CARD;
 int menu_cursor = 0;
+
 TFT_eSPI tft = TFT_eSPI();
+
+std::mutex rendering_mutex;
+
+void render_no_wifi_icon(bool on) {
+  std::lock_guard<std::mutex> m(rendering_mutex);
+  tft.drawBitmap(205, 5, epd_bitmap_no_wifi, 25, 25, on ? TFT_WHITE : TFT_BLACK);
+}
+
 int cursor[2] = {0, 0};
 
 std::vector<item> menu_items = {
@@ -67,6 +68,7 @@ void loadFonts()
 void handleScroller(int percent)
 {
   // tft.drawRect(234, 0, 6, 135, TFT_BLACK);
+  std::lock_guard<std::mutex> m(rendering_mutex);
   tft.drawBitmap(235, 2, epd_bitmap_scroll, 2, 130, TFT_WHITE);
   int y = round(map(percent, 0, 100, 8, 108));
   tft.drawBitmap(234, y, epd_bitmap_handle, 4, 10, TFT_WHITE);
@@ -75,6 +77,7 @@ void handleScroller(int percent)
 void handleMenu(int index)
 {
 
+  std::lock_guard<std::mutex> m(rendering_mutex);
   std::vector<item> current_items;
   // Serial.println("1");
   tft.fillScreen(TFT_BLACK);
@@ -158,6 +161,7 @@ bool basic_info_updated = false;
 
 void handle_basic_info()
 {
+  std::lock_guard<std::mutex> m(rendering_mutex);
   if (!basic_info_updated)
   {
     tft.fillScreen(TFT_BLACK);
@@ -193,9 +197,7 @@ void handle_basic_info()
 
 void handleScan()
 {
-  if (!ScannerWifi::ready()) tft.drawBitmap(205, 5, epd_bitmap_no_wifi, 25, 25, TFT_WHITE);
-  else { tft.fillRect(205, 5, 25, 25, TFT_BLACK); }
-
+  std::lock_guard<std::mutex> m(rendering_mutex);
   if (new_view)
   {
     tft.fillScreen(TFT_BLACK);

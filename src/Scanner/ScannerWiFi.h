@@ -2,6 +2,10 @@
 #define SCANNER_WIFI_H
 
 #include "config.h"
+#include "tasks.h"
+
+basic_info::UserInfo get_info(const String &uid);
+
 
 #include <HTTPClient.h>
 #include <WiFi.h>
@@ -27,6 +31,12 @@ namespace ScannerWifi
   bool ready() {
     return WiFi.isConnected();
   }
+
+  void reconnect_wifi()
+  {
+    WiFi.reconnect();
+  }
+
 } // namespace ScannerWifi
 
 #endif

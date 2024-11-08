@@ -1,5 +1,4 @@
 #include "ScannerWiFi.h"
-#include "ScannerTask.h"
 
 #include <Wire.h>
 #include <ArduinoJson.h>

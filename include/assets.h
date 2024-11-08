@@ -1,4 +1,8 @@
+#ifndef IMAGE_ASSETS_H
+#define IMAGE_ASSETS_H
+
 #include <Arduino.h>
+
 // 'action', 32x32px
 const unsigned char epd_bitmap_action [] PROGMEM = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
@@ -532,20 +536,4 @@ const unsigned char epd_bitmap_nfc_border[] PROGMEM = {
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf8, 0x00};
 
-// Array of all bitmaps for convenience. (Total bytes used to store images in PROGMEM = 7968)
-const int epd_bitmap_allArray_LEN = 14;
-const unsigned char *epd_bitmap_allArray[14] = {
-	epd_bitmap_action,
-	epd_bitmap_basic_info,
-	epd_bitmap_border,
-	epd_bitmap_handle,
-	epd_bitmap_harry,
-	epd_bitmap_nfc_border,
-	epd_bitmap_print_info,
-	epd_bitmap_scroll,
-	epd_bitmap_settings,
-	epd_bitmap_wave_1,
-	epd_bitmap_wave_2,
-	epd_bitmap_wave_3,
-	epd_bitmap_wave_4,
-	epd_bitmap_no_wifi};
+#endif // ASSETS_H

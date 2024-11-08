@@ -3,6 +3,11 @@
 
 #include <stdint.h>
 #include <Arduino.h>
+#include <FS.h>
+#include <SPI.h>
+#include <TFT_eSPI.h> // Hardware-specific library
+
+#include "assets.h"
 #include "config.h"
 #include "basic_info.h"
 
@@ -13,6 +18,9 @@ struct Button
 };
 extern Button nav_button;
 extern Button ent_button;
+
+
+void render_no_wifi_icon(bool on);
 
 enum view
 {
@@ -28,6 +36,7 @@ enum view
 namespace ScannerWifi {
     bool ready();
     void init_wifi();
+    void reconnect_wifi();
 }
 
 extern view current_view;

@@ -7,8 +7,9 @@
 
 const UBaseType_t taskPriority = 1;
 
-TaskHandle_t xGUITaskHandle = NULL;
-TaskHandle_t xScannerTaskHandle = NULL;
+TaskHandle_t xGUITaskHandle;
+TaskHandle_t xWifiTaskHandle;
+TaskHandle_t xScannerTaskHandle;
 
 void IRAM_ATTR nav_button_isr()
 {
@@ -27,7 +28,7 @@ bool success = false;
 uint8_t uid[] = {0, 0, 0, 0, 0, 0, 0};
 uint8_t uidLength = 4; // Length of the UID (4 or 7 bytes depending on ISO14443A card type)
 
-auto detected = false;
+bool detected = false;
 void IRAM_ATTR scanner_interrupt()
 {
   detected = true;
@@ -37,8 +38,6 @@ void ScannerTask(void *pvParameters)
 {
   (void)pvParameters;
 
-  ScannerWifi::init_wifi();
-  // Setup some freeRTOS stuff
   const TickType_t xFrequency = 1000 / 24; // 100 ms period
   TickType_t xLastTickTime = xTaskGetTickCount();
   Serial.println("NFC Begin");
@@ -46,18 +45,14 @@ void ScannerTask(void *pvParameters)
 
   for (;;)
   {
-    vTaskDelayUntil(&xLastTickTime, xFrequency);
     if (detected)
     {
       detected = false;
       success = nfc.readDetectedPassiveTargetID(uid, &uidLength);
-      // nfc.readdata()
-      // success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength);
-      Serial.println("Scanner");
+      // Serial.println("Scanner");
 
       if (success)
       {
-        // Serial.println("Card detected");
         nfc.PrintHex(uid, uidLength);
         String tagId = "";
         for (size_t i = 0; i < uidLength; i++)
@@ -82,8 +77,30 @@ void ScannerTask(void *pvParameters)
         nfc.startPassiveTargetIDDetection(PN532_MIFARE_ISO14443A);
       }
     }
+    xTaskDelayUntil(&xLastTickTime, xFrequency * 5);
   }
 }
+
+void WifiTask(void *)
+{
+  const TickType_t xFrequency = 1000 / 24; // 100 ms period
+  TickType_t xLastTickTime = xTaskGetTickCount();
+  Serial.println("Init Wifi Begin");
+
+  ScannerWifi::init_wifi();
+
+  bool render_updated = true;
+  for (;;) {
+    if (!ScannerWifi::ready()) {
+      ScannerWifi::reconnect_wifi();
+      render_no_wifi_icon(true);
+    } else {
+      render_no_wifi_icon(false);
+    }
+    xTaskDelayUntil(&xLastTickTime, xFrequency * 5);
+  }
+} 
+
 
 void setup()
 {
@@ -121,14 +138,23 @@ void setup()
   attachInterrupt(ent_button.PIN, ent_button_isr, FALLING);
   attachInterrupt(digitalPinToInterrupt(PN532_IRQ), scanner_interrupt, FALLING);
 
+
   Serial.println("ISRs Registered");
+
+  xTaskCreate(
+      WifiTask,
+      "Wifi Task",
+      5000,
+      NULL,
+      taskPriority,
+      &xGUITaskHandle);
 
   xTaskCreate(
       GUITask,
       "GUI Task",
       5000,
       NULL,
-      taskPriority,
+      taskPriority + 1,
       &xGUITaskHandle);
 
   xTaskCreate(
@@ -136,7 +162,7 @@ void setup()
       "Scanner Task",
       5000,
       NULL,
-      taskPriority,
+      taskPriority + 2,
       &xScannerTaskHandle);
 }
 
