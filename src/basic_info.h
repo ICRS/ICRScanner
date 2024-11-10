@@ -8,6 +8,7 @@ namespace basic_info {
 		bool can_print = false;
 		bool inducted = false;
 
+		String card_uid = "";
 		String shortcode = "";
 	};
 } // namespace basic_info

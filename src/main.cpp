@@ -6,6 +6,8 @@
 #include "tasks.h"
 #include "config.h"
 
+#include "GUI/ViewController.h"
+
 const UBaseType_t taskPriority = 1;
 
 TaskHandle_t xGUITaskHandle;
