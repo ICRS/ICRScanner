@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Adafruit_PN532.h>
 #include <Wire.h>
+#include <mutex>
 
 #include "tasks.h"
 #include "config.h"
@@ -10,6 +11,7 @@ const UBaseType_t taskPriority = 1;
 TaskHandle_t xGUITaskHandle;
 TaskHandle_t xWifiTaskHandle;
 TaskHandle_t xScannerTaskHandle;
+
 
 void IRAM_ATTR nav_button_isr()
 {
@@ -41,13 +43,19 @@ void ScannerTask(void *pvParameters)
   const TickType_t xFrequency = 1000 / 24; // 100 ms period
   TickType_t xLastTickTime = xTaskGetTickCount();
   Serial.println("NFC Begin");
-  // xTaskDelayUntil(&xLastTickTime, xFrequency * 5);
 
   for (;;)
   {
     if (detected)
     {
       detected = false;
+
+      if (current_view != SCAN_CARD) {
+        nfc.readDetectedPassiveTargetID(uid, &uidLength);
+        nfc.startPassiveTargetIDDetection(PN532_MIFARE_ISO14443A);
+        continue;
+      }
+
       success = nfc.readDetectedPassiveTargetID(uid, &uidLength);
       // Serial.println("Scanner");
 
@@ -74,8 +82,8 @@ void ScannerTask(void *pvParameters)
         current_view = view::BASIC_INFO;
         // tagId = tag.getUidString();
         Serial.println(tagId);
-        nfc.startPassiveTargetIDDetection(PN532_MIFARE_ISO14443A);
       }
+      nfc.startPassiveTargetIDDetection(PN532_MIFARE_ISO14443A);
     }
     xTaskDelayUntil(&xLastTickTime, xFrequency * 5);
   }

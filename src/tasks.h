@@ -5,6 +5,7 @@
 #include <Arduino.h>
 #include <FS.h>
 #include <SPI.h>
+#include <mutex>
 #include <TFT_eSPI.h> // Hardware-specific library
 
 #include "assets.h"
@@ -19,6 +20,7 @@ struct Button
 extern Button nav_button;
 extern Button ent_button;
 
+extern std::mutex rendering_mutex;
 
 void render_no_wifi_icon(bool on);
 

@@ -13,4 +13,6 @@
 #include <SPI.h>
 #include <TFT_eSPI.h> // Hardware-specific library
 
+std::mutex rendering_mutex;
+
 #endif

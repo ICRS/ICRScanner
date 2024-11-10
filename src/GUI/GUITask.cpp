@@ -21,8 +21,6 @@ int menu_cursor = 0;
 
 TFT_eSPI tft = TFT_eSPI();
 
-std::mutex rendering_mutex;
-
 void render_no_wifi_icon(bool on) {
   std::lock_guard<std::mutex> m(rendering_mutex);
   tft.drawBitmap(205, 5, epd_bitmap_no_wifi, 25, 25, on ? TFT_WHITE : TFT_BLACK);
@@ -76,7 +74,6 @@ void handleScroller(int percent)
 
 void handleMenu(int index)
 {
-
   std::lock_guard<std::mutex> m(rendering_mutex);
   std::vector<item> current_items;
   // Serial.println("1");
@@ -169,7 +166,7 @@ void handle_basic_info()
     tft.loadFont(FONT_BIG);
     tft.setCursor(12, 12);
 
-    tft.print("Card UID: " + card_uid);
+    tft.print(card_uid);
     tft.drawWideLine(12.0f, 40.0f, 228.0f, 40.0f, 2.0f, TFT_WHITE);
 
     tft.setCursor(12, 50);
@@ -186,6 +183,7 @@ void handle_basic_info()
     }
     basic_info_updated = true;
   }
+
   if (ent_button.pressed)
   {
     new_view = true;
