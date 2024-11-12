@@ -1,4 +1,4 @@
-# ICRS Card Scanner
+# 💳 ICRS Card Scanner
 
 ## [💻 MAIN CODEBASE: https://github.com/ICRS/icrs_lab](https://github.com/ICRS/icrs_lab)
 
