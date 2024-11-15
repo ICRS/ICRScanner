@@ -15,14 +15,17 @@ namespace GUI
         ScannerView() = default;
 
         void reset() override {
+            View::reset();
             new_view = true;
             nfc_animation_state = 0;
             long nfc_last_update = 0;
+            
         }
 
         void render() override
         {
             render_no_wifi();
+            // Serial.println("Rendering Scanner View");
 
             if (new_view)
             {

@@ -16,12 +16,14 @@
 
 
 namespace GUI {
+    TFT_eSPI tft = TFT_eSPI();
+
     class View
     {
         bool wifi_last_status = WiFi.isConnected();
 
         protected:
-            TFT_eSPI tft_ = TFT_eSPI();
+            TFT_eSPI& tft_ = tft;
 
         public:
         virtual void render() {
@@ -35,7 +37,26 @@ namespace GUI {
             }
         }
 
-        virtual void reset() {
+        virtual void handle_up()
+        {
+
+        }
+
+        virtual void handle_down()
+        {
+        }
+
+        virtual void handle_double_up()
+        {
+        }
+
+        virtual void handle_double_down()
+        {
+        }
+
+        virtual void reset()
+        {
+            tft_.fillScreen(TFT_BLACK);
         }
     };
 };

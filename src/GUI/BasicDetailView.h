@@ -27,6 +27,7 @@ namespace GUI
 
         void reset() override
         {
+            View::reset();
             basic_info_updated = false;
         }
 

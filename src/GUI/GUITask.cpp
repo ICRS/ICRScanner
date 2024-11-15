@@ -34,33 +34,6 @@ std::vector<item> menu_items = {
     {"Actions", epd_bitmap_action, ACTION_MENU},
     {"Settings", epd_bitmap_settings, ACTION_MENU}};
 
-void loadFonts()
-{
-  // make sure all the font files are loaded
-  if (!SPIFFS.begin())
-  {
-    Serial.println("SPIFFS initialisation failed!");
-    while (1)
-      yield(); // Stay here twiddling thumbs waiting
-  }
-  Serial.println("\r\nSPIFFS available!");
-
-  // ESP32 will crash if any of the fonts are missing
-  bool font_missing = false;
-  if (SPIFFS.exists("/PixelOperatorMono.vlw") == false)
-    font_missing = true;
-  if (SPIFFS.exists("/PixelOperatorMonoBold.vlw") == false)
-    font_missing = true;
-
-  if (font_missing)
-  {
-    Serial.println("\r\nFont missing in SPIFFS, did you upload it?");
-    while (1)
-      yield();
-  }
-  else
-    Serial.println("\r\nFonts found OK.");
-}
 
 // percent: 0 - 100
 void handleScroller(int percent)
@@ -252,26 +225,5 @@ void handleViews()
   default:
     handleNavigation();
     break;
-  }
-}
-
-void GUITask(void *pvParameters)
-{
-  (void)pvParameters;
-  // Setup TFT
-  tft.begin();
-  tft.setRotation(1);
-
-  // Load the fonts
-
-  loadFonts();
-  handleScan();
-  // Setup some freeRTOS stuff
-  const TickType_t xFrequency = 1000 / 24; // 100 ms period
-  TickType_t xLastTickTime = xTaskGetTickCount();
-  for (;;)
-  {
-    vTaskDelayUntil(&xLastTickTime, xFrequency);
-    handleViews();
   }
 }

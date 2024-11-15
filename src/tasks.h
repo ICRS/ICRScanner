@@ -48,8 +48,6 @@ extern bool card_uid_set;
 
 extern basic_info::UserInfo scanned_user_info;
 
-void GUITask(void *pvParamaters);
-
 basic_info::UserInfo get_info(const String &uid);
 
 #endif
