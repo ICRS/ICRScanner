@@ -1,301 +1,156 @@
+#include <lvgl.h>
+#include "config.h"
+
 #include <Arduino.h>
 #include <Adafruit_PN532.h>
 #include <Wire.h>
 #include <mutex>
 
-#include "tasks.h"
-#include "config.h"
+#include <TFT_eSPI.h>
 
-#include "GUI/ViewController.h"
+static void lv_port_indev_init(void);
+/*To use the built-in examples and demos of LVGL uncomment the includes below respectively.
+ *You also need to copy `lvgl/examples` to `lvgl/src/examples`. Similarly for the demos `lvgl/demos` to `lvgl/src/demos`.
+ *Note that the `lv_examples` library is for LVGL v7 and you shouldn't install it for this version (since LVGL v8)
+ *as the examples and demos are now part of the main LVGL library. */
 
-#define INCLUDE_vTaskSuspend 1
-#define INCLUDE_xTaskResumeFromISR 1
+//#include <examples/lv_examples.h>
+//#include <demos/lv_demos.h>
 
+/*Set to your screen resolution and rotation*/
+#define TFT_HOR_RES   135
+#define TFT_VER_RES   240
+#define TFT_ROTATION  LV_DISPLAY_ROTATION_90
 
-const UBaseType_t taskPriority = 1;
+/*LVGL draw into this buffer, 1/10 screen size usually works well. The size is in bytes*/
+#define DRAW_BUF_SIZE (TFT_HOR_RES * TFT_VER_RES / 10 * (LV_COLOR_DEPTH / 8))
+uint32_t draw_buf[DRAW_BUF_SIZE / 4];
 
-TaskHandle_t xGUITaskHandle;
-TaskHandle_t xWifiTaskHandle;
-TaskHandle_t xScannerTaskHandle;
-
-
-GUI::ViewController viewController;
-
-long nav = 0;
-void IRAM_ATTR nav_button_isr()
+// #if LV_USE_LOG != 0
+void my_print( lv_log_level_t level, const char * buf )
 {
-  if ((nav + 300) > millis())
-  {
-    return;
-  }
+    LV_UNUSED(level);
+    Serial.println(buf);
+    Serial.flush();
+}
+// #endif
 
-  nav = millis();
+/* LVGL calls it when a rendered image needs to copied to the display*/
+void my_disp_flush( lv_display_t *disp, const lv_area_t *area, uint8_t * px_map)
+{
+    /*Copy `px map` to the `area`*/
 
-  uint32_t ulPreviousValue = 0;
-  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    /*For example ("my_..." functions needs to be implemented by you)
+    uint32_t w = lv_area_get_width(area);
+    uint32_t h = lv_area_get_height(area);
 
-  xTaskNotifyAndQueryFromISR(
-      xGUITaskHandle,
-      0x101,
-      eSetValueWithOverwrite,
-      &ulPreviousValue,
-      &xHigherPriorityTaskWoken);
+    my_set_window(area->x1, area->y1, w, h);
+    my_draw_bitmaps(px_map, w * h);
+     */
 
-  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-  // if(ulPreviousValue & (1 << 2)) {
-  //   auto v = xTaskResumeFromISR(xGUITaskHandle);
-  //   if (v == pdTRUE) portYIELD_FROM_ISR();
-  // }
+    /*Call it to tell LVGL you are ready*/
+    lv_display_flush_ready(disp);
 }
 
-long ent = 0;
-void IRAM_ATTR ent_button_isr()
+/*Read the touchpad*/
+void my_touchpad_read( lv_indev_t * indev, lv_indev_data_t * data )
 {
-  if ((ent + 300) > millis())
-  {
-    return;
-  }
-  ent = millis();
+    /*For example  ("my_..." functions needs to be implemented by you)
+    int32_t x, y;
+    bool touched = my_get_touch( &x, &y );
 
-  uint32_t ulPreviousValue = 0;
-  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-  xTaskNotifyAndQueryFromISR(
-      xGUITaskHandle,
-      0x11,
-      eSetValueWithOverwrite,
-      &ulPreviousValue,
-      &xHigherPriorityTaskWoken);
-
-  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-  // if(ulPreviousValue) {
-  //   auto v = xTaskResumeFromISR(xGUITaskHandle);
-  //   if (v == pdTRUE) portYIELD_FROM_ISR();
-  // }
-}
-
-void loadFonts()
-{
-  // make sure all the font files are loaded
-  if (!SPIFFS.begin())
-  {
-    Serial.println("SPIFFS initialisation failed!");
-    while (1)
-      yield(); // Stay here twiddling thumbs waiting
-  }
-  Serial.println("\r\nSPIFFS available!");
-
-  // ESP32 will crash if any of the fonts are missing
-  bool font_missing = false;
-  if (SPIFFS.exists("/PixelOperatorMono.vlw") == false)
-    font_missing = true;
-  if (SPIFFS.exists("/PixelOperatorMonoBold.vlw") == false)
-    font_missing = true;
-
-  if (font_missing)
-  {
-    Serial.println("\r\nFont missing in SPIFFS, did you upload it?");
-    while (1)
-      yield();
-  }
-  else
-    Serial.println("\r\nFonts found OK.");
-}
-
-void GUITask(void *pvParameters)
-{
-  (void)pvParameters;
-  GUI::tft.begin();
-  GUI::tft.setRotation(1);
-  GUI::tft.fillScreen(TFT_BLACK);
-
-  loadFonts();
-  // handleScan();
-
-  const TickType_t xFrequency = pdMS_TO_TICKS( 100 ); // 100 ms period
-  TickType_t xLastTickTime = xTaskGetTickCount();
-
-  xTaskNotifyStateClear(xGUITaskHandle);
-  for (;;) {
-    uint32_t v = 0;
-    if (v = ulTaskNotifyTake(pdTRUE, xFrequency))
-    {
-      
-      switch (v & 0x111)
-      {
-      case (0x101):
-      //   viewController.handle_double_up(); 
-      //   break;
-      // case (0x100):
-        viewController.handle_single_up(); 
-        break;
-      case (0x011):
-      //   viewController.handle_double_down(); 
-      //   break;
-      // case (0x010):
-        viewController.handle_single_down(); 
-        break;
-      default:
-        break;
-      }
-    }
-
-    viewController.render();
-    // ulTaskNotifyTake(pdTRUE, xFrequency * 50);
-  }
-}
-
-Adafruit_PN532 nfc(PN532_IRQ, PN532_RST);
-basic_info::UserInfo scanned_user_info;
-bool success = false;
-
-uint8_t uid[] = {0, 0, 0, 0, 0, 0, 0};
-uint8_t uidLength = 4; // Length of the UID (4 or 7 bytes depending on ISO14443A card type)
-
-bool detected = false;
-void IRAM_ATTR scanner_interrupt()
-{
-  detected = true;
-}
-
-void ScannerTask(void *pvParameters)
-{
-  (void)pvParameters;
-
-  const TickType_t xFrequency = 1000 / 24; // 100 ms period
-  TickType_t xLastTickTime = xTaskGetTickCount();
-  Serial.println("NFC Begin");
-
-  for (;;)
-  {
-    if (detected)
-    {
-      detected = false;
-
-      if (current_view != SCAN_CARD) {
-        nfc.readDetectedPassiveTargetID(uid, &uidLength);
-        nfc.startPassiveTargetIDDetection(PN532_MIFARE_ISO14443A);
-        continue;
-      }
-
-      success = nfc.readDetectedPassiveTargetID(uid, &uidLength);
-      // Serial.println("Scanner");
-
-      if (success)
-      {
-        nfc.PrintHex(uid, uidLength);
-        String tagId = "";
-        for (size_t i = 0; i < uidLength; i++)
-        {
-          if (uid[i] < 16)
-          {
-            tagId += "0";
-          }
-          tagId += String(uid[i], HEX);
-        }
-
-        Serial.println(card_uid);
-        tagId.toUpperCase();
-        card_uid = tagId;
-        auto info = get_info(card_uid);
-        scanned_user_info = info;
-
-        viewController.request_view(GUI::view_t::BASIC_INFO);
-        card_uid_set = true;
-        // tagId = tag.getUidString();
-        Serial.println(tagId);
-      }
-      nfc.startPassiveTargetIDDetection(PN532_MIFARE_ISO14443A);
-    }
-    xTaskDelayUntil(&xLastTickTime, xFrequency * 5);
-  }
-}
-
-void WifiTask(void *)
-{
-  const TickType_t xFrequency = 1000 / 24; // 100 ms period
-  TickType_t xLastTickTime = xTaskGetTickCount();
-  Serial.println("Init Wifi Begin");
-
-  ScannerWifi::init_wifi();
-
-  bool render_updated = true;
-  for (;;) {
-    if (!ScannerWifi::ready()) {
-      ScannerWifi::reconnect_wifi();
-      render_no_wifi_icon(true);
+    if(!touched) {
+        data->state = LV_INDEV_STATE_RELEASED;
     } else {
-      render_no_wifi_icon(false);
-    }
-    xTaskDelayUntil(&xLastTickTime, xFrequency * 5);
-  }
-} 
+        data->state = LV_INDEV_STATE_PRESSED;
 
+        data->point.x = x;
+        data->point.y = y;
+    }
+     */
+}
+
+/*use Arduinos millis() as tick source*/
+static uint32_t my_tick(void)
+{
+    return millis();
+}
 
 void setup()
 {
-  Serial.begin(115200);
-  while (!Serial)
-    delay(10); // for Leonardo/Micro/Zero
+    String LVGL_Arduino = "Hello Arduino! ";
+    LVGL_Arduino += String('V') + lv_version_major() + "." + lv_version_minor() + "." + lv_version_patch();
 
-  Serial.println("Hello!");
+    Serial.begin( 115200 );
+    Serial.println( LVGL_Arduino );
 
-  nfc.begin();
+    lv_init();
+    // lv_port_indev_init();
 
-  uint32_t versiondata = nfc.getFirmwareVersion();
-  if (!versiondata)
-  {
-    Serial.print("Didn't find PN53x board");
-    while (1)
-      ; // halt
-  }
-  Serial.println("attach interrupt");
-  // nfc.SAMConfig();
-  Serial.print("Found chip PN5");
-  Serial.println((versiondata >> 24) & 0xFF, HEX);
-  Serial.print("Firmware ver. ");
-  Serial.print((versiondata >> 16) & 0xFF, DEC);
-  Serial.print('.');
-  Serial.println((versiondata >> 8) & 0xFF, DEC);
+    /*Set a tick source so that LVGL will know how much time elapsed. */
+    lv_tick_set_cb(my_tick);
 
-  // nfc.startPassiveTargetIDDetection(PN532_MIFARE_ISO14443A);
-  Serial.println("Registering ISRs");
-  nfc.startPassiveTargetIDDetection(PN532_MIFARE_ISO14443A);
+    /* register print function for debugging */
+#if LV_USE_LOG != 0
+    lv_log_register_print_cb( my_print );
+#endif
 
-  pinMode(nav_button.PIN, INPUT_PULLUP);
-  pinMode(ent_button.PIN, INPUT_PULLUP);
-  attachInterrupt(nav_button.PIN, nav_button_isr, FALLING);
-  attachInterrupt(ent_button.PIN, ent_button_isr, FALLING);
-  attachInterrupt(digitalPinToInterrupt(PN532_IRQ), scanner_interrupt, FALLING);
+    lv_display_t * disp;
+// #if LV_USE_TFT_ESPI
+    /*TFT_eSPI can be enabled lv_conf.h to initialize the display in a simple way*/
+    disp = lv_tft_espi_create(TFT_HOR_RES, TFT_VER_RES, draw_buf, sizeof(draw_buf));
+    lv_display_set_rotation(disp, TFT_ROTATION);
+
+// #else
+//     /*Else create a display yourself*/
+//     disp = lv_display_create(TFT_HOR_RES, TFT_VER_RES);
+//     lv_display_set_flush_cb(disp, my_disp_flush);
+//     lv_display_set_buffers(disp, draw_buf, NULL, sizeof(draw_buf), LV_DISPLAY_RENDER_MODE_PARTIAL);
+// #endif
+
+    /*Initialize the (dummy) input device driver*/
+    lv_indev_t * indev = lv_indev_create();
+    lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER); /*Touchpad should have POINTER type*/
+    // lv_indev_set_read_cb(indev, my_touchpad_read);
+
+    /* Create a simple label
+     * ---------------------
+     lv_obj_t *label = lv_label_create( lv_screen_active() );
+     lv_label_set_text( label, "Hello Arduino, I'm LVGL!" );
+     lv_obj_align( label, LV_ALIGN_CENTER, 0, 0 );
+
+     * Try an example. See all the examples
+     *  - Online: https://docs.lvgl.io/master/examples.html
+     *  - Source codes: https://github.com/lvgl/lvgl/tree/master/examples
+     * ----------------------------------------------------------------
 
 
-  Serial.println("ISRs Registered");
+     * Or try out a demo. Don't forget to enable the demos in lv_conf.h. E.g. LV_USE_DEMO_WIDGETS
+     * -------------------------------------------------------------------------------------------
 
-  xTaskCreate(
-      WifiTask,
-      "Wifi Task",
-      5000,
-      NULL,
-      taskPriority,
-      &xGUITaskHandle);
+     lv_demo_widgets();
+     */
+     lv_example_btn_1();
 
-  xTaskCreate(
-      GUITask,
-      "GUI Task",
-      5000,
-      NULL,
-      taskPriority + 1,
-      &xGUITaskHandle);
+    lv_obj_t *label = lv_label_create( lv_screen_active() );
+    lv_label_set_text( label, "Hello Arduino, I'm LVGL!" );
+    lv_obj_align( label, LV_ALIGN_CENTER, 0, 0 );
 
-  xTaskCreate(
-      ScannerTask,
-      "Scanner Task",
-      5000,
-      NULL,
-      taskPriority + 2,
-      &xScannerTaskHandle);
+    lv_obj_t *label2 = lv_label_create( lv_screen_active() );
+    lv_label_set_text(label2, "ICRS" );
+
+    static lv_style_t style;
+    lv_style_init(&style);
+    lv_color_t color{(uint8_t)0b11111111, (uint8_t)0x0, (uint8_t)0x0};
+    lv_style_set_text_color(&style, color);
+    lv_obj_add_style(label2, &style, 0);
+    lv_obj_align( label2, LV_ALIGN_TOP_MID, 0, 0 );
+
+    Serial.println( "Setup done" );
 }
 
 void loop()
 {
-  // put your main code here, to run repeatedly:
+    lv_timer_handler(); /* let the GUI do its work */
+    delay(5); /* let this time pass */
 }
