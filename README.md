@@ -11,6 +11,7 @@ This is used to verify the identity of students who are using the 3D printer in 
 - Student verification
 - 3D printing Authentication
 - Adding new card to the system (not implemented yet)
+- Print label to claim a project box (not implemented yet)
 
 [//]: <> ( TODO: add images )
 
@@ -18,9 +19,10 @@ This is used to verify the identity of students who are using the 3D printer in 
 
 See [https://github.com/ICRS/icrs_lab](https://github.com/ICRS/icrs_lab)
 
-copy the contents of `src/TFT_config.h` into `.pio/libdeps/lilygo-t-display/TFT_eSPI/User_Setup.h`
+1. Copy the contents of `src/TFT_config.h` into `.pio/libdeps/lilygo-t-display/TFT_eSPI/User_Setup.h`
+   This will let us use the settings for the TFT display with the library
 
-This will let us use the settings for teh TFT display with the library
+2. Edit the `src/config.h` file to set the correct wifi credentials and the server address.
 
 Then use [Platform IO](https://platformio.org/) to build and upload the code.
 
