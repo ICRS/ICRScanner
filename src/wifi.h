@@ -11,56 +11,66 @@
 #include "display.h"
 
 int WIFI_TIMEOUT = 10000;
+int WIFI_CHECK_INTERVAL = 10000;
+int wifiCheckTime = 0;
+
+// TODO: switch to WIFI Manager https://github.com/tzapu/WiFiManager
 
 
-void initWifi()
-  {
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-    int WifiTimeLimit = millis() + WIFI_TIMEOUT;
+void connectWifi(){
+  int WifiTimeLimit = millis() + WIFI_TIMEOUT;
+  Serial.print("Connecting to WiFi ..");
+  clearScreen();
+  cleared = false;
+  tft.setCursor(12, 12);
+  tft.print("connecting...");
 
-    Serial.print("Connecting to WiFi ..");
 
-    while (WiFi.status() != WL_CONNECTED)
+  while (WiFi.status() != WL_CONNECTED)
     {
       Serial.print('.');
       delay(1000);
 
       if (millis()  > WifiTimeLimit)
       {
-        Serial.println("Failed to connect to WiFi");
         clearScreen();
         tft.setCursor(12, 12);
+        Serial.println("Failed to connect to WiFi");
         tft.print("No WiFi :(");
         delay(5000);
         return;
       }
     }
 
+    tft.print("Connected!");
     Serial.println(WiFi.localIP());
-  }
+}
 
-void waitForWifi(){
+
+void initWifi()
+{
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    connectWifi();
+
+    WiFi.onEvent(
+        [](WiFiEvent_t event, WiFiEventInfo_t info) {
+            Serial.println("WiFi disconnected");
+            connectWifi();
+        },
+        WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
+}
+
+void autoReconnectWifi(){
+  if (millis() < wifiCheckTime + WIFI_CHECK_INTERVAL) return;
+  wifiCheckTime = millis();
   if ((WiFi.status() == WL_CONNECTED)) return;
-
-  // reconnect
-  Serial.println("Reconnecting to WiFi...");
-  WiFi.disconnect();
-  WiFi.reconnect();
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    Serial.print('.');
-    delay(1000);
-  }
+  connectWifi();
 }
 
 UserInfo getUserInfo(String uid)
 {
   UserInfo user;
-
-  Serial.println("basic_info");
-  waitForWifi();
-
   HTTPClient http;
 
   http.begin(ICRS_SERVER_HOST, ICRS_SERVER_PORT, "/api/access/member/permissions/uuid?uuid=" + uid); // HTTP
@@ -94,7 +104,6 @@ UserInfo getUserInfo(String uid)
 
 int sendToPrintWindow(String uid)
 {
-  waitForWifi();
   HTTPClient http;
 
   http.begin(ICRS_SERVER_HOST, ICRS_SERVER_PORT, "/api/access/print-window/update?uuid=" + uid); // HTTP

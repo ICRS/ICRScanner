@@ -21,6 +21,7 @@ void setup()
 
   pinMode(NAV_BUTTON_PIN, INPUT_PULLUP);
   pinMode(ENT_BUTTON_PIN, INPUT_PULLUP);
+
 }
 
 void handleButtons(){
@@ -56,6 +57,7 @@ void loop()
 {
   handleButtons();
   performRoutine();
+  autoReconnectWifi();
 
   delay(300);
 }
