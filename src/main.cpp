@@ -6,6 +6,8 @@
 
 #include "routines/get_info.h"
 #include "routines/printer_auth.h"
+#include "routines/print_label.h"
+
 
 int routine = 0;
 
@@ -40,7 +42,7 @@ void performRoutine(){
     printerAuthRoutine();
     break;
   case 2:
-    Serial.println("TODO: Print Label");
+    printlabelRoutine();
     break;
   case 3:
     Serial.println("TODO: Add to DB");

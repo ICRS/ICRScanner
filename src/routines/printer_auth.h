@@ -12,16 +12,27 @@ void displayPrintAuth(int status, String uid){
     tft.drawWideLine(12.0f, 40.0f, 228.0f, 40.0f, 2.0f, TFT_WHITE);
 
     tft.setCursor(12, 50);
-    if (status == 200)
+
+    String message = String(status) + ": Unknown Error";
+
+    switch (status)
     {
-        tft.print("Authenticated!");
-        Serial.println("Authenticated!");
+    case 200:
+        message = "Authenticated!";
+        break;
+    case -1:
+        message = "-1: Can't Find Server";
+        break;
+    case 204:
+        message = "204: Can't Find Card!";
+        break;
+    case 401:
+        message = "401: Not Inducted!";
+        break;
     }
-    else
-    {
-        tft.print("User not found");
-        Serial.println("User not found");
-    }
+
+    tft.print(message);
+    Serial.println(message);
 };
 
 void printerAuthRoutine(){
@@ -43,5 +54,6 @@ void printerAuthRoutine(){
     int status = sendToPrintWindow(uid);
 
     NFClastRead = millis();
+    cleared = false;
     displayPrintAuth(status, uid);
 }

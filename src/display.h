@@ -9,6 +9,7 @@
 
 TFT_eSPI tft = TFT_eSPI();
 int animationState = 0;
+bool cleared = false;
 
 void clearScreen()
 {

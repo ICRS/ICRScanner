@@ -54,7 +54,6 @@ void waitForWifi(){
   }
 }
 
-
 UserInfo getUserInfo(String uid)
 {
   UserInfo user;
@@ -98,7 +97,7 @@ int sendToPrintWindow(String uid)
   waitForWifi();
   HTTPClient http;
 
-  http.begin(ICRS_SERVER_HOST, ICRS_SERVER_PORT, "/api/access//print-window/update?uuid=" + uid); // HTTP
+  http.begin(ICRS_SERVER_HOST, ICRS_SERVER_PORT, "/api/access/print-window/update?uuid=" + uid); // HTTP
   http.setAuthorization(ICRS_SERVER_USERNAME, ICRS_SERVER_PASSWORD);
 
   int response_code = http.GET();

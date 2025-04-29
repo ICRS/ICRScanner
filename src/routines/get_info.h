@@ -4,7 +4,6 @@
 
 int lastRead = 0;
 int WAIT_DELAY = 5000;
-bool cleared = false;
 
 void displayUserInfo(UserInfo user, String uid){
     clearScreen();
