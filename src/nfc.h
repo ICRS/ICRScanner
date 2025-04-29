@@ -7,7 +7,7 @@
 
 int NFC_TIMEOUT = 2000;
 bool readyToScan = true;
-int last_NFC = 0;
+int lastNFC = 0;
 
 Adafruit_PN532 nfc(PN532_IRQ, PN532_RST);
 uint8_t uidLength = 4;
@@ -23,24 +23,23 @@ void loadNFC(){
       while (1)
         ; // halt
     }
-    Serial.println("Registering ISRs");
-    nfc.startPassiveTargetIDDetection(PN532_MIFARE_ISO14443A);
-
-    Serial.println("ISRs Registered");
 }
 
 String readNFC()
 {
-  int time = millis();
-  if (!last_NFC < time + NFC_TIMEOUT) return "";
-
+  if (lastNFC > (millis() - NFC_TIMEOUT)) return "";
 
   readyToScan = true;
 
-  bool foundNFC = nfc.readDetectedPassiveTargetID(uid, &uidLength);
-  if (!foundNFC) return "";
+  bool foundNFC = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, &uid[0], &uidLength, 100);
 
-  last_NFC = millis();
+  if (!foundNFC) {
+    Serial.println("No NFC detected");
+    return "";
+  }
+
+
+  lastNFC = millis();
   readyToScan = false;
 
   nfc.PrintHex(uid, uidLength);
@@ -59,7 +58,6 @@ String readNFC()
   Serial.println(tagId);
 
   return tagId;
-//   nfc.startPassiveTargetIDDetection(PN532_MIFARE_ISO14443A);
 }
 
 #endif

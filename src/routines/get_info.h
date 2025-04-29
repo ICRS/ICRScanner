@@ -3,12 +3,13 @@
 #include "./../display.h"
 
 int lastRead = 0;
+int WAIT_DELAY = 5000;
+bool cleared = false;
 
-void displayUserInfo(UserInfo user){
+void displayUserInfo(UserInfo user, String uid){
     clearScreen();
     tft.setCursor(12, 12);
-
-    tft.print(card_uid);
+    tft.print(uid);
     tft.drawWideLine(12.0f, 40.0f, 228.0f, 40.0f, 2.0f, TFT_WHITE);
 
     tft.setCursor(12, 50);
@@ -26,21 +27,30 @@ void displayUserInfo(UserInfo user){
     }
 };
 
+
+
 void getInfoRoutine(){
-    if (lastRead < millis() - 2000)
-    {
-        waitingScreen();
+    Serial.println("getInfoRoutine");
+
+    if (lastRead < millis() - WAIT_DELAY) {
+        if (!cleared)
+        {
+            clearScreen();
+            cleared = true;
+        }
+        waitingScreen("INFO");
     }
 
     String uid = readNFC();
+    if (uid == "") return;
+    displayLoading(uid);
 
-    if (uid == "")
-    {
-        Serial.println("No NFC detected");
-        return;
-    }
-
-    lastRead = millis();
     UserInfo user = getUserInfo(uid);
-    displayUserInfo(user);
+
+    displayUserInfo(user, uid);
+    lastRead = millis();
+    cleared = false;
+
+    Serial.println("F");
+
 }

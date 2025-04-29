@@ -8,11 +8,16 @@
 #include <ArduinoJson.h>
 #include "userinfo.h"
 #include "config.h"
+#include "display.h"
+
+int WIFI_TIMEOUT = 10000;
+
 
 void initWifi()
   {
     WiFi.mode(WIFI_STA);
-    WiFi.begin(ICRS_SSID, ICRS_PASSWORD);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    int WifiTimeLimit = millis() + WIFI_TIMEOUT;
 
     Serial.print("Connecting to WiFi ..");
 
@@ -20,13 +25,20 @@ void initWifi()
     {
       Serial.print('.');
       delay(1000);
+
+      if (millis()  > WifiTimeLimit)
+      {
+        Serial.println("Failed to connect to WiFi");
+        clearScreen();
+        tft.setCursor(12, 12);
+        tft.print("No WiFi :(");
+        delay(5000);
+        return;
+      }
     }
 
     Serial.println(WiFi.localIP());
   }
-
-  String card_uid = "";
-bool card_uid_set = false;
 
 void waitForWifi(){
   if ((WiFi.status() == WL_CONNECTED)) return;

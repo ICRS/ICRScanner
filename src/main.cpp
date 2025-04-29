@@ -14,23 +14,19 @@ void setup()
   Serial.begin(115200);
 
   initDisplay();
-  loadNFC();
   initWifi();
+  loadNFC();
 
   pinMode(NAV_BUTTON_PIN, INPUT_PULLUP);
   pinMode(ENT_BUTTON_PIN, INPUT_PULLUP);
-
 }
 
 void handleButtons(){
   if (digitalRead(NAV_BUTTON_PIN) == LOW)
   {
-    routine++;
-    if (routine > 3)
-    {
-      routine = 0;
-    }
-    delay(500);
+    routine = (routine + 1) % 3;
+    clearScreen();
+    delay(200);
   }
 }
 
@@ -38,12 +34,10 @@ void performRoutine(){
   switch (routine)
   {
   case 0:
-    Serial.println("Get Info");
     getInfoRoutine();
     break;
   case 1:
     printerAuthRoutine();
-    Serial.println("Auth Printing");
     break;
   case 2:
     Serial.println("TODO: Print Label");
@@ -61,5 +55,5 @@ void loop()
   handleButtons();
   performRoutine();
 
-  delay(100);
+  delay(300);
 }

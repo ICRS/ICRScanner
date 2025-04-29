@@ -17,26 +17,43 @@ void clearScreen()
     tft.loadFont(FONT_BIG);
 }
 
-void waitingScreen(){
-    clearScreen();
+void displayLoading(String uid){
+  clearScreen();
+  tft.setCursor(12, 12);
+  tft.print(uid);
+  tft.drawWideLine(12.0f, 40.0f, 228.0f, 40.0f, 2.0f, TFT_WHITE);
+
+  tft.setCursor(12, 50);
+  tft.print("Loading...");
+};
+
+void waitingScreen(String screenName = ""){
+    tft.loadFont(FONT_SMALL);
+    tft.setCursor(12, 100);
+    tft.print(screenName);
+
+    tft.loadFont(FONT_BIG);
     tft.setCursor(12, 12);
     tft.print("Scan your");
-    tft.setCursor(12, 44);
+    tft.setCursor(12, 38);
     tft.print("Card!");
 
     (++animationState) %= 4;
 
-    tft.fillRect(110, 31, 25, 63, TFT_BLACK);
-    tft.fillRect(135, 8, 67, 108, TFT_BLACK);
+    tft.drawBitmap(72, 75, epd_bitmap_harry, 58, 40, TFT_WHITE);
+
+
+    tft.fillRect(130, 31, 25, 63, TFT_BLACK);
+    tft.fillRect(155, 8, 67, 108, TFT_BLACK);
 
     if (animationState >= 0)
-        tft.drawBitmap(111, 58, epd_bitmap_wave_1, 21, 34, TFT_WHITE);
+        tft.drawBitmap(131, 58, epd_bitmap_wave_1, 21, 34, TFT_WHITE);
     if (animationState >= 1)
-        tft.drawBitmap(123, 41, epd_bitmap_wave_2, 31, 57, TFT_WHITE);
+        tft.drawBitmap(143, 41, epd_bitmap_wave_2, 31, 57, TFT_WHITE);
     if (animationState >= 2)
-        tft.drawBitmap(135, 25, epd_bitmap_wave_3, 42, 81, TFT_WHITE);
+        tft.drawBitmap(155, 25, epd_bitmap_wave_3, 42, 81, TFT_WHITE);
     if (animationState >= 3)
-        tft.drawBitmap(147, 9, epd_bitmap_wave_4, 53, 104, TFT_WHITE);
+        tft.drawBitmap(167, 9, epd_bitmap_wave_4, 53, 104, TFT_WHITE);
 }
 
 void initDisplay(){
@@ -68,6 +85,12 @@ void initDisplay(){
   }
   else
     Serial.println("\r\nFonts found OK.");
+
+  clearScreen();
+  tft.setTextColor(TFT_WHITE);
+  tft.setTextSize(1);
+  tft.setCursor(12, 100);
+  tft.print("Starting up...");
 }
 
 #endif

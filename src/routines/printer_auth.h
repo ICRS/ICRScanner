@@ -4,11 +4,11 @@
 
 int NFClastRead = 0;
 
-void displayPrintAuth(int status){
+void displayPrintAuth(int status, String uid){
     clearScreen();
     tft.setCursor(12, 12);
 
-    tft.print(card_uid);
+    tft.print(uid);
     tft.drawWideLine(12.0f, 40.0f, 228.0f, 40.0f, 2.0f, TFT_WHITE);
 
     tft.setCursor(12, 50);
@@ -25,20 +25,23 @@ void displayPrintAuth(int status){
 };
 
 void printerAuthRoutine(){
-    if (NFClastRead < millis() - 2000)
-    {
-        waitingScreen();
+    Serial.println("printerAuthRoutine");
+
+    if (NFClastRead < millis() - WAIT_DELAY) {
+        if (!cleared)
+        {
+            clearScreen();
+            cleared = true;
+        }
+        waitingScreen("AUTH");
     }
 
     String uid = readNFC();
+    if (uid == "") return;
+    displayLoading(uid);
 
-    if (uid == "")
-    {
-        Serial.println("No NFC detected");
-        return;
-    }
+    int status = sendToPrintWindow(uid);
 
     NFClastRead = millis();
-    int status = sendToPrintWindow(uid);
-    displayPrintAuth(status);
+    displayPrintAuth(status, uid);
 }
