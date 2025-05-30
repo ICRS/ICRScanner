@@ -1,55 +1,63 @@
 #include <Arduino.h>
-#include "tasks.h"
 #include "config.h"
+#include "nfc.h"
+#include "display.h"
+#include "wifi.h"
 
-const UBaseType_t taskPriority = 1;
-
-TaskHandle_t xGUITaskHandle = NULL;
-TaskHandle_t xScannerTaskHandle = NULL;
-
+#include "routines/get_info.h"
+#include "routines/printer_auth.h"
+#include "routines/print_label.h"
 
 
-void IRAM_ATTR nav_button_isr()
-{
-  nav_button.pressed = true;
-}
-
-void IRAM_ATTR ent_button_isr()
-{
-  ent_button.pressed = true;
-}
+int routine = 0;
 
 void setup()
 {
   Serial.begin(115200);
 
-  Serial.println("Registering ISRs");
-  pinMode(nav_button.PIN, INPUT_PULLUP);
-  pinMode(ent_button.PIN, INPUT_PULLUP);
-  attachInterrupt(nav_button.PIN, nav_button_isr, FALLING);
-  attachInterrupt(ent_button.PIN, ent_button_isr, FALLING);
-  Serial.println("ISRs Registered");
+  initDisplay();
+  initWifi();
+  loadNFC();
 
-  
-  
-  xTaskCreate(
-      GUITask,
-      "GUI Task",
-      5000,
-      NULL,
-      taskPriority,
-      &xGUITaskHandle);
+  pinMode(NAV_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(ENT_BUTTON_PIN, INPUT_PULLUP);
 
-  xTaskCreate(
-      ScannerTask,
-      "Scanner Task",
-      5000,
-      NULL,
-      taskPriority,
-      &xScannerTaskHandle);
+}
+
+void handleButtons(){
+  if (digitalRead(NAV_BUTTON_PIN) == LOW)
+  {
+    routine = (routine + 1) % 3;
+    clearScreen();
+    delay(200);
   }
+}
+
+void performRoutine(){
+  switch (routine)
+  {
+  case 0:
+    getInfoRoutine();
+    break;
+  case 1:
+    printerAuthRoutine();
+    break;
+  case 2:
+    printlabelRoutine();
+    break;
+  case 3:
+    Serial.println("TODO: Add to DB");
+    break;
+  default:
+    break;
+  }
+}
 
 void loop()
 {
-  // put your main code here, to run repeatedly:
+  handleButtons();
+  performRoutine();
+  autoReconnectWifi();
+
+  delay(300);
 }
